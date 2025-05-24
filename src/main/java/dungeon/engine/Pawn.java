@@ -46,5 +46,10 @@ public class Pawn {
         this.column = column;
     }
 
+    // Check if the game is over
+    public boolean isGameOver() {
+        return health <= 0;
+    }
+
 
 }
