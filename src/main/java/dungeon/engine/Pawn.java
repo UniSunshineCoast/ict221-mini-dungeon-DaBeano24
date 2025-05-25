@@ -40,7 +40,7 @@ public class Pawn {
 
     // location management system
     public int whatsRow() { return row; }
-    public int whatsCol() { return column; }
+    public int whatsColumn() { return column; }
     public void setLocation(int row, int column) {
         this.row = row;
         this.column = column;

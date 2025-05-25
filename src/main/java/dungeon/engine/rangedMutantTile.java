@@ -3,7 +3,8 @@ package dungeon.engine;
 public class rangedMutantTile extends Tile{
     private boolean slayed = false;
 
-    @override void interact(Pawn pawn) {
+    @override
+    void interact(Pawn pawn) {
         if (!slayed) {
             pawn.addScore(2);
             slayed = true;
