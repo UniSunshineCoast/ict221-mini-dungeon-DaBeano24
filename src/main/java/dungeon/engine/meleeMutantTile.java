@@ -4,9 +4,12 @@ public class meleeMutantTile extends Tile {
     private boolean slayed = false;
 
     @Override
-    public void interact(Pawn pawn) {
-        pawn.adjustHpAmount(-2);
-        pawn.addScore(+2); // Decrease health by 2 and increase score by 2 when interacting with a melee mutant tile
+    public void interact(Pawn pawn, int difficulty) {
+        int damage = 2 + Math.min(difficulty, 5); // Damage increases with difficulty, max 5
+        pawn.adjustHpAmount(-damge);
+        pawn.addScore(+2); // Subtract damage taken and increase score by 2 when interacting with a melee mutant tile
+        slayed = true; // Mark the melee mutant as slayed
+        // Check if the pawn is defeated
         if (pawn.isGameOver()) {
             System.out.println("You encountered a melee mutant and were defeated :( Game Over.");
         } else {

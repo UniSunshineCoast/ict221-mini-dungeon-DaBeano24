@@ -4,7 +4,7 @@ public class rangedMutantTile extends Tile{
     private boolean slayed = false;
 
     @override
-    void interact(Pawn pawn) {
+    void interact(Pawn pawn, int difficulty) {
         if (!slayed) {
             pawn.addScore(2);
             slayed = true;

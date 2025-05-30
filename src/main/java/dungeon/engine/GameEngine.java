@@ -17,6 +17,19 @@ public class GameEngine {
      *
      * @param size the width and height.
      */
+    // Step Settings
+    private int maxSteps = 100;
+    private int stepsTaken = 0;
+
+    private void updateMaxSteps() {
+        if (difficulty >= 6) {
+            maxSteps = 50; 100 - (difficulty - 5) * 10; // Decrease max steps based on difficulty
+        } else {
+            maxSteps = 100; // Default max steps
+        }
+    }
+
+
     public GameEngine(int size) {
         map = new Tile[size][size];
 
@@ -41,6 +54,22 @@ public class GameEngine {
 
         map[0][0].setStyle("-fx-background-color: #7baaa4");
         map[size-1][size-1].setStyle("-fx-background-color: #7baaa4");
+    }
+
+    // Game Difficulty Section
+    private int difficulty = 3;
+    public GameEngine(int size, int difficulty) {
+        this.difficulty = Math.max(0, Math.min(10, difficulty)); // Ensure difficulty is between 0 and 10
+        map = new Tile[size][size];
+    }
+    public int getDifficulty() { return difficulty; }
+    public void setDifficulty(int d ) {
+        this.difficulty = Math.max(0, Math.min(10, d));
+        updateMaxSteps(); // Update max steps based on new difficulty
+    }
+    public void increaseDifficulty(int amount) {
+        this.difficulty = Math.min(10, this.difficulty + amount);
+        updateMaxSteps(); // recalculate max steps
     }
 
     private void placeRandomTile(Tile tile) {
@@ -78,10 +107,16 @@ public class GameEngine {
 
         // Tile Interaction
         Tile tile = map[newRow][newColumn];
-        tile.interact(pawn);
+        tile.interact(pawn, difficulty);
 
         // Update Pawn Position
         pawn.setLocation(newRow, newColumn);
+        stepsTaken++;
+        if (stepsTaken >= maxSteps) {
+            System.out.println("You have run out of steps, You collapse from exhaustion and die. Game Over.");
+            pawn.adjustHpAmount(-pawn.whatsHp()); // Set health to 0
+            return;
+        }
 
         //Ranged Mutant Check
         checkRangedMutantAttack(); // Checks to see if the pawn is attacked after moving.
@@ -100,8 +135,9 @@ public class GameEngine {
             if (checkRow >= 0 && checkRow < getSize() && checkColumn >= 0 && checkColumn < getSize()) {
                 Tile tile = map[checkRow][checkColumn];
                 if (tile instanceof rangedMutantTile ranged && !ranged.isSlayed()) {
-                    if (Math.random() < 0.5) { // Adds the 50% chance of being attacked by the ranged mutant when in range.
-                        pawn.adjustHpAmount(-2); // Decrease health by 2 when attacked by the mutant
+                    if (Math.random() < 0.5) {
+                        int damage = 2 + (int)(difficulty * 0.2); // Adds the 50% chance of being attacked by the ranged mutant when in range.
+                        pawn.adjustHpAmount(-damage); // Decrease health by 2 when attacked by the mutant
                         System.out.println("You were attacked by a ranged Mutant, Ouch! Your health is now: " + pawn.whatsHp());
                     } else {
                         System.out.println("A ranged mutant shot at you but missed, slay it before it can attack again.")
@@ -137,7 +173,20 @@ public class GameEngine {
     /**
      * Plays a text-based game
      */
+
     public static void main(String[] args) {
+        GameEngine engine = new GameEngine(10, difficulty);
+        Scanner scanner = new Scanner(System.in);
+
+        System.out.println("Please select the games difficulty, be warned it will directly impact the damage you take from hostiles");
+        String input = scanner.nextline();
+        int difficulty = 3; // Default difficulty
+        try {
+            difficulty = Integer.parseInt(input);
+            if (difficulty < 0 || difficulty > 10) difficulty = 3;
+        } catch (NumberFormatException e) {
+            System.out.println("Invalid input, setting difficulty to default (3).");
+        }
         GameEngine engine = new GameEngine(10);
 
         engine.pawn = new Pawn(9, 0); // Sets the start location of the pawn at the bottem left hand corner of the map.
@@ -151,7 +200,7 @@ public class GameEngine {
             engine.movePawn(input);
 
             System.out.println("HP: " + engine.pawn.whatsHp());
-            System.out.println("Steps: " + engine.pawn.whatsSteps());
+            System.out.println("Steps: " + engine.stepsTaken + "/" + engine.maxSteps);
 
         }
         System.out.println("Game Over! Your score is: " + engine.pawn.whatsScore());
