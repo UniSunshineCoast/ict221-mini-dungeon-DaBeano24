@@ -1,67 +1,90 @@
 package dungeon.engine;
 
 import javafx.scene.text.Text;
+import java.util.Scanner;
 
 public class GameEngine {
 
-    /**
-     * An example board to store the current game state.
-     *
-     * Note: depending on your game, you might want to change this from 'int' to String or something?
-     */
     private Tile[][] map;
     private Pawn pawn;
 
-    /**
-     * Creates a square game board.
-     *
-     * @param size the width and height.
-     */
     // Step Settings
     private int maxSteps = 100;
     private int stepsTaken = 0;
 
     private void updateMaxSteps() {
         if (difficulty >= 6) {
-            maxSteps = 50; 100 - (difficulty - 5) * 10; // Decrease max steps based on difficulty
+            maxSteps = 100 - (difficulty - 5) * 10; // Decrease max steps based on difficulty
         } else {
             maxSteps = 100; // Default max steps
         }
     }
 
+    public void levelAdvance() {
+        level++;
 
-    public GameEngine(int size) {
-        map = new Tile[size][size];
+        if (level > 2) {
+            System.out.println("You have completed the game! Congratulations!");
+            System.exit(0); // Ends the game after level 2
+        }
 
-        for (int i = 0; i < size; i++) {
-            for (int j = 0; j < size; j++) {
-                Tile tile = new defaultTile();
-                Text text = new Text(i + "," + j);
-                tile.getChildren().add(text);
+    map = new Tile[getSize()][getSize()];
+        for (int i = 0; i < getSize(); i++) {
+            for (int j = 0; j < getSize(); j++) {
                 map[i][j] = new defaultTile();
             }
         }
-        // Adding entry tile where the pawn spawns in.
-        for (int i = 0; i < 5; i++) placeRandomTile(new TrapTile());
-        for (int i = 0; i < 2; i++) placeRandomTile(new healthTile());
-        for (int i = 0; i < 3; i++) placeRandomTile(new rangedMutantTile());
-        for (int i = 0; i < 3; i++) placeRandomTile(new meleeMutantTile());
-        for (int i = 0; i < 2; i++) placeRandomTile(new GoldTile());
+
+        // Re-populate the map with tiles based on the new level
+        for (int i = 0; i < 5 + level; i++) placeRandomTile(new TrapTile());
+        for (int i = 0; i < 2 + level; i++) placeRandomTile(new healthTile());
+        for (int i = 0; i < 3 + level; i++) placeRandomTile(new rangedMutantTile());
+        for (int i = 0; i < 3 + level; i++) placeRandomTile(new meleeMutantTile());
+        for (int i = 0; i < 2 + level; i++) placeRandomTile(new GoldTile());
         placeRandomTile(new ladderTile());
 
-        System.out.println("Map Generated")
+        // Spawn the pawn at the bottom left corner of the new map
+        pawn.setLocation(getSize() - 1, 0);
 
+        System.out.println("Level " + level + " generated.");
+    }
 
-        map[0][0].setStyle("-fx-background-color: #7baaa4");
-        map[size-1][size-1].setStyle("-fx-background-color: #7baaa4");
+    // section to track the active level of the game
+    private int level = 1;
+
+    public int getLevel() {
+        return level;
     }
 
     // Game Difficulty Section
     private int difficulty = 3;
     public GameEngine(int size, int difficulty) {
         this.difficulty = Math.max(0, Math.min(10, difficulty)); // Ensure difficulty is between 0 and 10
-        map = new Tile[size][size];
+        this.level = 1;
+        updateMaxSteps();
+
+        this.map = new Tile[size][size];
+        for (int i = 0; i < size; i++) {
+            for (int j = 0; j < size; j++) {
+                map[i][j] = new defaultTile(); // Initialize the map with default tiles
+            }
+        }
+
+        for (int i = 0; i < 5; i++) placeRandomTile(new TrapTile());
+        for (int i = 0; i < 2; i++) placeRandomTile(new healthTile());
+        for (int i = 0; i < 3; i++) placeRandomTile(new rangedMutantTile());
+        for (int i = 0; i < 3; i++) placeRandomTile(new meleeMutantTile());
+        for (int i = 0; i < 2; i++) placeRandomTile(new GoldTile());
+
+        placeRandomTile(new ladderTile());
+        System.out.println("Map generated with size: " + size + " and difficulty: " + difficulty);
+        map[0][0].setStyle("-fx-background-color: #7baaa4");
+        map[size - 1][size - 1].setStyle("-fx-background-color: #7baaa4");
     }
+    public int getSize() {
+        return map.length;
+    }
+
     public int getDifficulty() { return difficulty; }
     public void setDifficulty(int d ) {
         this.difficulty = Math.max(0, Math.min(10, d));
@@ -99,7 +122,7 @@ public class GameEngine {
         }
 
         // Check for Borders
-        if (newRow) < 0 || newRow >= getSize() || newColumn < 0 || newColumn >= getSize()) {
+        if (newRow < 0 || newRow >= getSize() || newColumn < 0 || newColumn >= getSize()) {
             System.out.println("You smashed your head against a wall, try again");
             return;
 
@@ -108,6 +131,12 @@ public class GameEngine {
         // Tile Interaction
         Tile tile = map[newRow][newColumn];
         tile.interact(pawn, difficulty);
+
+        // Reverts slayed Mutant Tiles to defaultTiles
+        if ((tile instanceof meleeMutantTile m && m.isSlayed()) ||
+                (tile instanceof rangedMutantTile r && r.isSlayed())) {
+            map[newRow][newColumn] = new defaultTile();
+        }
 
         // Update Pawn Position
         pawn.setLocation(newRow, newColumn);
@@ -120,7 +149,7 @@ public class GameEngine {
 
         //Ranged Mutant Check
         checkRangedMutantAttack(); // Checks to see if the pawn is attacked after moving.
-        
+
     }
 
     private void checkRangedMutantAttack() {
@@ -140,7 +169,7 @@ public class GameEngine {
                         pawn.adjustHpAmount(-damage); // Decrease health by 2 when attacked by the mutant
                         System.out.println("You were attacked by a ranged Mutant, Ouch! Your health is now: " + pawn.whatsHp());
                     } else {
-                        System.out.println("A ranged mutant shot at you but missed, slay it before it can attack again.")
+                        System.out.println("A ranged mutant shot at you but missed, slay it before it can attack again.");
                         }
                     // Checks to see if the attack has killed the pawn.
                     if (pawn.isGameOver()) {
@@ -149,7 +178,7 @@ public class GameEngine {
                 }
             }
 
-        })
+        }
     }
 
     /**
@@ -157,9 +186,6 @@ public class GameEngine {
      *
      * @return this is both the width and the height.
      */
-    public int getSize() {
-        return map.length;
-    }
 
     /**
      * The map of the current game.
@@ -175,11 +201,10 @@ public class GameEngine {
      */
 
     public static void main(String[] args) {
-        GameEngine engine = new GameEngine(10, difficulty);
-        Scanner scanner = new Scanner(System.in);
 
+        Scanner scanner = new Scanner(System.in);
         System.out.println("Please select the games difficulty, be warned it will directly impact the damage you take from hostiles");
-        String input = scanner.nextline();
+        String input = scanner.nextLine();
         int difficulty = 3; // Default difficulty
         try {
             difficulty = Integer.parseInt(input);
@@ -187,26 +212,24 @@ public class GameEngine {
         } catch (NumberFormatException e) {
             System.out.println("Invalid input, setting difficulty to default (3).");
         }
-        GameEngine engine = new GameEngine(10);
+        GameEngine engine = new GameEngine(10, difficulty);
 
         engine.pawn = new Pawn(9, 0); // Sets the start location of the pawn at the bottem left hand corner of the map.
+        engine.pawn.setEngine(engine);
 
-        java.util.Scanner scanner = new java.util.Scanner(System.in);
 
         while (!engine.pawn.isGameOver()) {
             System.out.print("Move (U/D/R/L): ");
-            String input = scanner.nextLine();
-
+            input = scanner.nextLine().trim();
             engine.movePawn(input);
-
             System.out.println("HP: " + engine.pawn.whatsHp());
             System.out.println("Steps: " + engine.stepsTaken + "/" + engine.maxSteps);
 
         }
         System.out.println("Game Over! Your score is: " + engine.pawn.whatsScore());
+        System.out.printf("The size of map is %d * %d\n", engine.getSize(), engine.getSize()); // ******Original code dont remove just yet*****
 
         }
 
-        System.out.printf("The size of map is %d * %d\n", engine.getSize(), engine.getSize()); // ******Original code dont remove just yet*****
-    }
+
 }

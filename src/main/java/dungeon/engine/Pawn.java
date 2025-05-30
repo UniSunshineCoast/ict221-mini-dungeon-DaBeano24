@@ -8,6 +8,15 @@ public class Pawn {
     private int steps = 0;
     private final int maxHealth = 10;
 
+    // Leveling and difficulty system
+    private GameEngine engine;
+    public void setEngine(GameEngine engine) {
+        this.engine = engine;
+    }
+    public GameEngine getEngine() {
+        return engine;
+    }
+
     public Pawn(int row, int column) {
         this.row = row;
         this.column = column;
