@@ -99,7 +99,7 @@ public class Controller {
                 ImageView icon = new ImageView(getTileImage(cell));
                 icon.setFitWidth(40);
                 icon.setFitHeight(40);
-                gridPane.add(icon, j, i); // j equals colomn (x). and i equals row (y).
+                gridPane.add(icon, j, i); // j equals column (x). and i equals row (y).
             }
         }
 

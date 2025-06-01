@@ -17,7 +17,7 @@ public class GameGUI extends Application {
 
     @Override
     public void start(Stage primaryStage) throws Exception {
-        BorderPane root = FXMLLoader.load(getClass().getResource("game_gui.fxml"));
+        BorderPane root = FXMLLoader.load(getClass().getResource("/dungeon/gui/game_gui.fxml"));
 
         primaryStage.setScene(new Scene(root, 800, 800));
         primaryStage.setTitle("MiniDungeon Game");

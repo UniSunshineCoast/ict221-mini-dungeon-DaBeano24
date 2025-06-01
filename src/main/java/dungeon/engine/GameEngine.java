@@ -73,7 +73,7 @@ public class GameEngine {
                 map[i][j] = new defaultTile(); // Initialize the map with default tiles
             }
         }
-
+        // Place initial tiles on the map
         for (int i = 0; i < 5; i++) placeRandomTile(new TrapTile());
         for (int i = 0; i < 2; i++) placeRandomTile(new healthTile());
         for (int i = 0; i < 3; i++) placeRandomTile(new rangedMutantTile());
@@ -81,6 +81,11 @@ public class GameEngine {
         for (int i = 0; i < 2; i++) placeRandomTile(new GoldTile());
 
         placeRandomTile(new ladderTile());
+
+        // Set the pawn's initial position
+        this.pawn = new Pawn(size - 1, 0); // Start at the bottom left corner
+        this.pawn.setEngine(this); // Set the engine for the pawn
+
         System.out.println("Map generated with size: " + size + " and difficulty: " + difficulty);
         map[0][0].setStyle("-fx-background-color: #7baaa4");
         map[size - 1][size - 1].setStyle("-fx-background-color: #7baaa4");
