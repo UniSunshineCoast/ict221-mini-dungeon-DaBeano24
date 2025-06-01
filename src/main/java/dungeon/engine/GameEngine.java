@@ -8,6 +8,10 @@ public class GameEngine {
     private Tile[][] map;
     private Pawn pawn;
 
+    public Pawn getPawn() {
+        return pawn;
+    }
+
     // Step Settings
     private int maxSteps = 100;
     private int stepsTaken = 0;

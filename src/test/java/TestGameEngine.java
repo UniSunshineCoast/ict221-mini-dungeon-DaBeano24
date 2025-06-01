@@ -6,9 +6,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 public class TestGameEngine {
     @Test
     void testGetSize() {
-        GameEngine ge = new GameEngine(10);
+        GameEngine gameEngine = new GameEngine(10, 3);
 
-        assertEquals(10, ge.getSize());
+        assertEquals(10, gameEngine.getSize());
 
     }
 }
