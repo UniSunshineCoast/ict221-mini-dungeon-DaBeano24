@@ -93,13 +93,24 @@ public class Controller {
 
     private void updateGui() {
         gridPane.getChildren().clear();
-        for (int i = 0; i < engine.getSize(); i++) {
+
+        int pawnRow = engine.getPawn().whatsRow();
+        int pawnColumn = engine.getPawn().whatsColumn();
+
+        for (int i = 0; i <engine.getSize(); i++) {
             for (int j = 0; j < engine.getSize(); j++) {
-                Tile cell = engine.getMap()[i][j];
-                ImageView icon = new ImageView(getTileImage(cell));
+                ImageView icon;
+
+                if (i == pawnRow && j == pawnColumn) {
+                    icon = new ImageView(new Image(getClass().getResourceAsStream("/images/pawn.png")));
+                } else {
+                    Tile cell = engine.getMap()[i][j];
+                    icon = new ImageView(getTileImage(cell));
+            }
+
                 icon.setFitWidth(40);
                 icon.setFitHeight(40);
-                gridPane.add(icon, j, i); // j equals column (x). and i equals row (y).
+                gridPane.add(icon, j, i); // j = column, i = row
             }
         }
 

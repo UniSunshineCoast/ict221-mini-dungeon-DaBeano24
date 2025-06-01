@@ -4,25 +4,45 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
-<BorderPane prefHeight="800.0" prefWidth="800.0" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="dungeon.gui.Controller">
-    <padding>
-        <Insets bottom="15.0" left="15.0" right="15.0" top="15.0" />
-    </padding>
-
-    <center>
-        <GridPane fx:id="gridPane" prefHeight="400.0" prefWidth="400.0" BorderPane.alignment="CENTER"/>
-    </center>
+<BorderPane xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="dungeon.gui.Controller"
+            prefHeight="600.0" prefWidth="800.0">
+    <!--- Left Panel: Player Hud and Movement buttons -->
 
     <left>
-        <VBox spacing="10" BorderPane.alignment="CENTER_LEFT">
+        <VBox spacing="10" BorderPane.alignment="CENTER">
             <Label fx:id="hpLabel" text="HP: 10" />
             <Label fx:id="stepsLabel" text="Steps: 0" />
             <Label fx:id="scoreLabel" text="Score: 0" />
+
+            <!-- Movement Buttons (WASD)-->
+            <GridPane hgap="5" vgap="5">
+                <Button text="Up" onAction="#onUpButtonPressed" GridPane.columnIndex="1" GridPane.rowIndex="0"/>
+                <Button text="Down" onAction="#onDownButtonPressed" GridPane.columnIndex="1" GridPane.rowIndex="2"/>
+                <Button text="Left" onAction="#onLeftButtonPressed" GridPane.columnIndex="0" GridPane.rowIndex="1"/>
+                <Button text="Right" onAction="#onRightButtonPressed" GridPane.columnIndex="2" GridPane.rowIndex="1"/>
+            </GridPane>
         </VBox>
     </left>
 
+    <!--- Center Panel: Game Grid -->
+    <center>
+        <GridPane fx:id="gridPane" alignment="CENTER" />
+    </center>
+
+    <!--- Right Panel: Control Buttons -->
+    <right>
+        <VBox spacing="10" alignment="TOP_RIGHT" BorderPane.alignment="CENTER">
+            <Button text="Help" onAction="#onHelpClicked" />
+            <Button text="Play" onAction="#onRunClicked" />
+            <Button text="Pause" /> <!--- onAction="onPauseClicked" /> -->
+            <Button text="Save" onAction="#onSaveClicked" />
+        </VBox>
+    </right>
+
 
     <bottom>
-        <TextArea fx:id="gameLog" editable="false" wrapText="true" prefHeight="100.0"/>
+        <TextArea fx:id="gameLog" editable="false" wrapText="true" prefHeight="80.0"/>
     </bottom>
+
 </BorderPane>
