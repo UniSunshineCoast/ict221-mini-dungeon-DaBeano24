@@ -43,10 +43,13 @@ public class GameEngine {
 
     public void levelAdvance() {
         level++;
-
         if (level > 2) {
             log("You have completed the game! Congratulations!");
-            return;
+
+            if (!pawn.isGameOver()) {
+                pawn.adjustHpAmount(-pawn.whatsHp()); // Set health to 0
+            }
+            return; // Exit if the game is completed
         }
 // This runs only for level 2
     map = new Tile[getSize()][getSize()];
@@ -134,6 +137,11 @@ public class GameEngine {
 
     // Pawn Movement Section
     public void movePawn(String direction) {
+        if (pawn.isGameOver()) {
+            log("Game Over! You cannot move anymore.");
+            return;
+        }
+
         int newRow = pawn.whatsRow();
         int newColumn = pawn.whatsColumn();
 
@@ -163,6 +171,7 @@ public class GameEngine {
         }
         if (pawn.isGameOver()) {
             log("You met a tragic end, how unfortunate, Game Over.");
+            return;
     }
 
 
@@ -218,6 +227,7 @@ public class GameEngine {
                     // Checks to see if the attack has killed the pawn.
                     if (pawn.isGameOver()) {
                         log("Your Heart was Pierced by a ranged mutants arrow (you kinda need that organ) Game Over.");
+                        return;
                     }
                 }
             }

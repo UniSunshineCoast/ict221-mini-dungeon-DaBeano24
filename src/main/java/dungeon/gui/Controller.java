@@ -50,28 +50,28 @@ public class Controller {
     @FXML
     public void onUpButtonPressed() {
         engine.movePawn("u");
-        updateGui();
+        javafx.application.Platform.runLater(this::updateGui);
         logMessage("Moved Up");
     }
 
     @FXML
     public void onDownButtonPressed() {
         engine.movePawn("d");
-        updateGui();
+        javafx.application.Platform.runLater(this::updateGui);
         logMessage("Moved Down");
     }
 
     @FXML
     public void onLeftButtonPressed() {
         engine.movePawn("l");
-        updateGui();
+        javafx.application.Platform.runLater(this::updateGui);
         logMessage("Moved Left");
     }
 
     @FXML
     public void onRightButtonPressed() {
         engine.movePawn("r");
-        updateGui();
+        javafx.application.Platform.runLater(this::updateGui);
         logMessage("Moved Right");
     }
 
@@ -135,32 +135,32 @@ public class Controller {
         scoreLabel.setText("Score: " + engine.getPawn().whatsScore());
         gridPane.setGridLinesVisible(true);
 
-if (!gameOverHandled) {
-    if (engine.getLevel() > 2 && !gameOverHandled) {
-        int finalScore = engine.getPawn().whatsScore();
+        if (!gameOverHandled) {
+            if (engine.getPawn().isGameOver()) {
+                int finalScore = engine.getPawn().whatsScore();
 
-        if (engine.updateTopScores(finalScore)) {
-            logMessage("Congratulations! You escaped the dungeon and made the top scores list with a score of " + finalScore + "!");
-        } else {
-            logMessage("You have escaped the dungeon, Your final score is: " + finalScore);
+                if (engine.updateTopScores(finalScore)) {
+                    logMessage("Congratulations! You made the top scores list with a score of " + finalScore + "!");
+                }
+
+                displayTopScores();
+                showGameOverDialog("lose");
+                gameOverHandled = true;
+
+            } else if (engine.getLevel() > 2) {
+                int finalScore = engine.getPawn().whatsScore();
+
+                if (engine.updateTopScores(finalScore)) {
+                    logMessage("Congratulations! You escaped the dungeon and made the top scores list with a score of " + finalScore + "!");
+                } else {
+                    logMessage("You have escaped the dungeon, Your final score is: " + finalScore);
+                }
+
+                displayTopScores();
+                showGameOverDialog("win");
+                gameOverHandled = true;
+            }
         }
-
-        displayTopScores();
-        showGameOverDialog("win");
-        gameOverHandled = true;
-
-    } else if (engine.getPawn().isGameOver() && !gameOverHandled) {
-        int finalScore = engine.getPawn().whatsScore();
-
-        if (engine.updateTopScores(finalScore)) {
-            logMessage("Congratulations! You made the top scores list with a score of " + finalScore + "!");
-        }
-
-        displayTopScores();
-        showGameOverDialog("lose");
-        gameOverHandled = true;
-    }
-}
     }
 
     private Image getTileImage(Tile tile) {
