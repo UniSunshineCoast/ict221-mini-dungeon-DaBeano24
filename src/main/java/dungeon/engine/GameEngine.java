@@ -43,23 +43,14 @@ public class GameEngine {
 
     public void levelAdvance() {
         level++;
-        if (level > 2) {
-            log("You have completed the game! Congratulations!");
 
-            if (!pawn.isGameOver()) {
-                pawn.adjustHpAmount(-pawn.whatsHp()); // Set health to 0
-            }
-            return; // Exit if the game is completed
-        }
-// This runs only for level 2
-    map = new Tile[getSize()][getSize()];
+        map = new Tile[getSize()][getSize()];
         for (int i = 0; i < getSize(); i++) {
             for (int j = 0; j < getSize(); j++) {
                 map[i][j] = new defaultTile();
             }
         }
 
-        // Re-populate the map with tiles based on the new level
         for (int i = 0; i < 5 + level; i++) placeRandomTile(new TrapTile());
         for (int i = 0; i < 2 + level; i++) placeRandomTile(new healthTile());
         for (int i = 0; i < 3 + level; i++) placeRandomTile(new rangedMutantTile());
@@ -67,12 +58,11 @@ public class GameEngine {
         for (int i = 0; i < 2 + level; i++) placeRandomTile(new GoldTile());
         placeRandomTile(new ladderTile());
 
-        // Spawn the pawn at the bottom left corner of the new map
         pawn.setLocation(getSize() - 1, 0);
-
         log("Level " + level + " generated.");
-        stepsTaken = 0; // Reset steps taken for the new level
+        stepsTaken = 0;
     }
+
 
     // section to track the active level of the game
     private int level = 1;
@@ -140,6 +130,7 @@ public class GameEngine {
         if (pawn.isGameOver()) {
             log("Game Over! You cannot move anymore.");
             return;
+
         }
 
         int newRow = pawn.whatsRow();
@@ -162,17 +153,25 @@ public class GameEngine {
             return;
 
         }
-
-        // Tile Interaction
+// Tile Interaction
         Tile tile = map[newRow][newColumn];
+        int currentLevel = level;
         tile.interact(pawn, difficulty);
-        if (pawn.whatsHp() <= 0 && !pawn.isGameOver()) {
-            pawn.adjustHpAmount(-pawn.whatsHp());
-        }
-        if (pawn.isGameOver()) {
-            log("You met a tragic end, how unfortunate, Game Over.");
+
+// If level has changed due to ladder interaction, stop processing
+        if (level > currentLevel) {
             return;
-    }
+        }
+
+// Win condition: Ladder on Level 2
+        if (tile instanceof ladderTile && level == 2 && !pawn.isGameOver()) {
+            log("You climbed up the ladder and escaped the dungeon! You win!");
+            pawn.setGameWon(true); // << You will add this method
+            pawn.adjustHpAmount(-pawn.whatsHp()); // Ends the game
+            return;
+        }
+
+
 
 
         // Replace GoldTiles with defaultTiles after interaction
@@ -203,6 +202,10 @@ public class GameEngine {
         //Ranged Mutant Check
         checkRangedMutantAttack(); // Checks to see if the pawn is attacked after moving.
 
+        if (pawn.isGameOver()) {
+            log("You met a tragic end, how unfortunate, Game Over.");
+            return;
+        }
     }
 
     private void checkRangedMutantAttack() {

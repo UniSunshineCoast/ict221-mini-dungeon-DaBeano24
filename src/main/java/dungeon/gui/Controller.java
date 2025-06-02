@@ -50,28 +50,28 @@ public class Controller {
     @FXML
     public void onUpButtonPressed() {
         engine.movePawn("u");
-        javafx.application.Platform.runLater(this::updateGui);
+        updateGui();
         logMessage("Moved Up");
     }
 
     @FXML
     public void onDownButtonPressed() {
         engine.movePawn("d");
-        javafx.application.Platform.runLater(this::updateGui);
+        updateGui();
         logMessage("Moved Down");
     }
 
     @FXML
     public void onLeftButtonPressed() {
         engine.movePawn("l");
-        javafx.application.Platform.runLater(this::updateGui);
+        updateGui();
         logMessage("Moved Left");
     }
 
     @FXML
     public void onRightButtonPressed() {
         engine.movePawn("r");
-        javafx.application.Platform.runLater(this::updateGui);
+        updateGui();
         logMessage("Moved Right");
     }
 
@@ -126,7 +126,7 @@ public class Controller {
 
                 icon.setFitWidth(40);
                 icon.setFitHeight(40);
-                gridPane.add(icon, j, i); // j = column, i = row
+                gridPane.add(icon, j, i);
             }
         }
 
@@ -135,33 +135,27 @@ public class Controller {
         scoreLabel.setText("Score: " + engine.getPawn().whatsScore());
         gridPane.setGridLinesVisible(true);
 
-        if (!gameOverHandled) {
-            if (engine.getPawn().isGameOver()) {
-                int finalScore = engine.getPawn().whatsScore();
+        if (!gameOverHandled && engine.getPawn().isGameOver()) {
+            int finalScore = engine.getPawn().whatsScore();
 
-                if (engine.updateTopScores(finalScore)) {
-                    logMessage("Congratulations! You made the top scores list with a score of " + finalScore + "!");
-                }
-
+            if (engine.getPawn().isGameWon()) {
+                logMessage("You escaped the dungeon. Final score: " + finalScore);
                 displayTopScores();
-                showGameOverDialog("lose");
-                gameOverHandled = true;
-
-            } else if (engine.getLevel() > 2) {
-                int finalScore = engine.getPawn().whatsScore();
-
-                if (engine.updateTopScores(finalScore)) {
-                    logMessage("Congratulations! You escaped the dungeon and made the top scores list with a score of " + finalScore + "!");
-                } else {
-                    logMessage("You have escaped the dungeon, Your final score is: " + finalScore);
-                }
-
+                showWinDialog();
+            } else {
+                logMessage("You died. Final score: " + finalScore);
                 displayTopScores();
-                showGameOverDialog("win");
-                gameOverHandled = true;
+                showDeathDialog();
             }
+
+            gameOverHandled = true;
         }
+
+
+
+
     }
+
 
     private Image getTileImage(Tile tile) {
         String imageName;
@@ -177,37 +171,58 @@ public class Controller {
         return new Image(getClass().getResourceAsStream("/images/" + imageName));
     }
 
-    private void showGameOverDialog(String outcome) {
+    private void showWinDialog() {
         javafx.application.Platform.runLater(() -> {
             javafx.scene.control.Alert alert = new javafx.scene.control.Alert(javafx.scene.control.Alert.AlertType.INFORMATION);
-            alert.setTitle("Game Over");
+            alert.setTitle("You Escaped!");
+            alert.setHeaderText("Congratulations!");
+            alert.setContentText("You escaped the dungeon!\nFinal score: " + engine.getPawn().whatsScore());
 
-            if (outcome.equals("win")) {
-                alert.setHeaderText("Congratulations! You escaped the dungeon!");
-                alert.setContentText("Your final score is: " + engine.getPawn().whatsScore());
-            } else {
-                alert.setHeaderText("You have been defeated!");
-                alert.setContentText("Would you like to restart or exit?");
-            }
+            javafx.scene.control.ButtonType restart = new javafx.scene.control.ButtonType("Restart");
+            javafx.scene.control.ButtonType exit = new javafx.scene.control.ButtonType("Exit");
+            alert.getButtonTypes().setAll(restart, exit);
 
-            javafx.scene.control.ButtonType restartButton = new javafx.scene.control.ButtonType("Restart");
-            javafx.scene.control.ButtonType exitButton = new javafx.scene.control.ButtonType("Exit");
-
-            alert.getButtonTypes().setAll(restartButton, exitButton);
             alert.showAndWait().ifPresent(response -> {
-                if (response == restartButton) {
-                    engine = new GameEngine(10, 3); // Reset the game with a new engine instance
+                if (response == restart) {
+                    engine = new GameEngine(10, 3);
                     engine.loadTopScores();
                     engine.setLogger(this::logMessage);
                     updateGui();
+                    gameOverHandled = false;
                     logMessage("Game restarted. New dungeon generated.");
-                } else if (response == exitButton) {
-                    javafx.application.Platform.exit(); // Exit the application
+                } else {
+                    javafx.application.Platform.exit();
                 }
             });
-
         });
     }
+
+    private void showDeathDialog() {
+        javafx.application.Platform.runLater(() -> {
+            javafx.scene.control.Alert alert = new javafx.scene.control.Alert(javafx.scene.control.Alert.AlertType.INFORMATION);
+            alert.setTitle("Game Over");
+            alert.setHeaderText("You have been defeated!");
+            alert.setContentText("Your final score: " + engine.getPawn().whatsScore());
+
+            javafx.scene.control.ButtonType restart = new javafx.scene.control.ButtonType("Restart");
+            javafx.scene.control.ButtonType exit = new javafx.scene.control.ButtonType("Exit");
+            alert.getButtonTypes().setAll(restart, exit);
+
+            alert.showAndWait().ifPresent(response -> {
+                if (response == restart) {
+                    engine = new GameEngine(10, 3);
+                    engine.loadTopScores();
+                    engine.setLogger(this::logMessage);
+                    updateGui();
+                    gameOverHandled = false;
+                    logMessage("Game restarted. New dungeon generated.");
+                } else {
+                    javafx.application.Platform.exit();
+                }
+            });
+        });
+    }
+
     private void displayTopScores() {
         List<dungeon.engine.TopScore> scores = engine.getTopScores();
         StringBuilder sb = new StringBuilder();
