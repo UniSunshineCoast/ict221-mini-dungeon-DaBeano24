@@ -12,6 +12,19 @@ public class GameEngine {
         return pawn;
     }
 
+    private java.util.function.Consumer<String> logger = null;
+    public void setLogger(java.util.function.Consumer<String> logger) {
+        this.logger = logger;
+    }
+
+    public void log(String message) {
+        if (logger != null) {
+            logger.accept(message);
+        } else {
+            System.out.println(message); // Console output as fallback
+        }
+    }
+
     // Step Settings
     private int maxSteps = 100;
     private int stepsTaken = 0;
@@ -28,7 +41,7 @@ public class GameEngine {
         level++;
 
         if (level > 2) {
-            System.out.println("You have completed the game! Congratulations!");
+            log("You have completed the game! Congratulations!");
             System.exit(0); // Ends the game after level 2
         }
 
@@ -50,7 +63,7 @@ public class GameEngine {
         // Spawn the pawn at the bottom left corner of the new map
         pawn.setLocation(getSize() - 1, 0);
 
-        System.out.println("Level " + level + " generated.");
+        log("Level " + level + " generated.");
     }
 
     // section to track the active level of the game
@@ -86,7 +99,7 @@ public class GameEngine {
         this.pawn = new Pawn(size - 1, 0); // Start at the bottom left corner
         this.pawn.setEngine(this); // Set the engine for the pawn
 
-        System.out.println("Map generated with size: " + size + " and difficulty: " + difficulty);
+        log("Map generated with size: " + size + " and difficulty: " + difficulty);
         map[0][0].setStyle("-fx-background-color: #7baaa4");
         map[size - 1][size - 1].setStyle("-fx-background-color: #7baaa4");
     }
@@ -125,14 +138,14 @@ public class GameEngine {
             case "r": newColumn++; break; // Move Right
             case "l": newColumn--; break; // Move Left
             default:
-                System.out.println("Invalid movement, Instead use U D R L Keys");
+                log("Invalid movement, Instead use U D R L Keys");
                 return;
 
         }
 
         // Check for Borders
         if (newRow < 0 || newRow >= getSize() || newColumn < 0 || newColumn >= getSize()) {
-            System.out.println("You smashed your head against a wall, try again");
+            log("You smashed your head against a wall, try again");
             return;
 
         }
@@ -140,6 +153,20 @@ public class GameEngine {
         // Tile Interaction
         Tile tile = map[newRow][newColumn];
         tile.interact(pawn, difficulty);
+        if (pawn.isGameOver()) {
+            log("You met a tragic end, how unfortunate, Game Over.");
+            return; // Stop further processing if the pawn is dead
+        }
+
+        // Replace GoldTiles with defaultTiles after interaction
+        if (tile instanceof GoldTile gold && gold.isCollected()) {
+            map[newRow][newColumn] = new defaultTile();
+        }
+
+        // Reverts healthTiles to defaultTiles after interaction
+        if (tile instanceof healthTile h && h.isUsed()) {
+            map[newRow][newColumn] = new defaultTile();
+        }
 
         // Reverts slayed Mutant Tiles to defaultTiles
         if ((tile instanceof meleeMutantTile m && m.isSlayed()) ||
@@ -151,7 +178,7 @@ public class GameEngine {
         pawn.setLocation(newRow, newColumn);
         stepsTaken++;
         if (stepsTaken >= maxSteps) {
-            System.out.println("You have run out of steps, You collapse from exhaustion and die. Game Over.");
+            log("You have run out of steps, You collapse from exhaustion and die. Game Over.");
             pawn.adjustHpAmount(-pawn.whatsHp()); // Set health to 0
             return;
         }
@@ -176,13 +203,13 @@ public class GameEngine {
                     if (Math.random() < 0.5) {
                         int damage = 2 + (int)(difficulty * 0.2); // Adds the 50% chance of being attacked by the ranged mutant when in range.
                         pawn.adjustHpAmount(-damage); // Decrease health by 2 when attacked by the mutant
-                        System.out.println("You were attacked by a ranged Mutant, Ouch! Your health is now: " + pawn.whatsHp());
+                        log("You were attacked by a ranged Mutant, Ouch! Your health is now: " + pawn.whatsHp());
                     } else {
-                        System.out.println("A ranged mutant shot at you but missed, slay it before it can attack again.");
+                        log("A ranged mutant shot at you but missed, slay it before it can attack again.");
                         }
                     // Checks to see if the attack has killed the pawn.
                     if (pawn.isGameOver()) {
-                        System.out.println("Your Heart was Pierced by a ranged mutants arrow (you kinda need that organ) Game Over.");
+                        log("Your Heart was Pierced by a ranged mutants arrow (you kinda need that organ) Game Over.");
                     }
                 }
             }
@@ -222,20 +249,21 @@ public class GameEngine {
             System.out.println("Invalid input, setting difficulty to default (3).");
         }
         GameEngine engine = new GameEngine(10, difficulty);
+        engine.setLogger(System.out::println); // Set the logger to print to console
 
         engine.pawn = new Pawn(9, 0); // Sets the start location of the pawn at the bottem left hand corner of the map.
         engine.pawn.setEngine(engine);
 
 
         while (!engine.pawn.isGameOver()) {
-            System.out.print("Move (U/D/R/L): ");
+            engine.log("Move (U/D/R/L): ");
             input = scanner.nextLine().trim();
             engine.movePawn(input);
-            System.out.println("HP: " + engine.pawn.whatsHp());
-            System.out.println("Steps: " + engine.stepsTaken + "/" + engine.maxSteps);
+            engine.log("HP: " + engine.pawn.whatsHp());
+            engine.log("Steps: " + engine.stepsTaken + "/" + engine.maxSteps);
 
         }
-        System.out.println("Game Over! Your score is: " + engine.pawn.whatsScore());
+        engine.log("Game Over! Your score is: " + engine.pawn.whatsScore());
         System.out.printf("The size of map is %d * %d\n", engine.getSize(), engine.getSize()); // ******Original code dont remove just yet*****
 
         }

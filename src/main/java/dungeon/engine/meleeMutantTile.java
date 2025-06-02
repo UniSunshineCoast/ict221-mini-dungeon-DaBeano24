@@ -11,9 +11,9 @@ public class meleeMutantTile extends Tile {
         slayed = true; // Mark the melee mutant as slayed
         // Check if the pawn is defeated
         if (pawn.isGameOver()) {
-            System.out.println("You encountered a melee mutant and were defeated :( Game Over.");
+            pawn.getEngine().log("You encountered a melee mutant and were defeated :( Game Over.");
         } else {
-            System.out.println("You fought a melee mutant and defeated them but lost 2 health. Current health: " + pawn.whatsHp() + ". Your score is now: " + pawn.whatsScore());
+            pawn.getEngine().log("You fought a melee mutant and defeated them but lost 2 health. Current health: " + pawn.whatsHp() + ". Your score is now: " + pawn.whatsScore());
         }
     }
     @Override

@@ -8,7 +8,7 @@ public class GoldTile extends Tile {
         if (!collected) {
             pawn.addScore(2);
             collected = true;
-            System.out.println("You found gold! Your score is now: " + pawn.whatsScore());
+            pawn.getEngine().log("You found gold! Your score is now: " + pawn.whatsScore());
         }
     }
 

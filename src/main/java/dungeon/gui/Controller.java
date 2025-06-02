@@ -41,6 +41,7 @@ public class Controller {
     @FXML
     public void initialize() {
         engine = new GameEngine(10, 3); // Initialise the initial game with a size ten map and a difficulty level of 3.
+        engine.setLogger(this::logMessage);
         updateGui();
         logMessage("Welcome to the Dungeon Game! Use the buttons to move your pawn.");
     }
@@ -91,13 +92,14 @@ public class Controller {
         logMessage("Save functionality is not yet implemented.");
     }
 
+
     private void updateGui() {
         gridPane.getChildren().clear();
 
         int pawnRow = engine.getPawn().whatsRow();
         int pawnColumn = engine.getPawn().whatsColumn();
 
-        for (int i = 0; i <engine.getSize(); i++) {
+        for (int i = 0; i < engine.getSize(); i++) {
             for (int j = 0; j < engine.getSize(); j++) {
                 ImageView icon;
 
@@ -106,7 +108,7 @@ public class Controller {
                 } else {
                     Tile cell = engine.getMap()[i][j];
                     icon = new ImageView(getTileImage(cell));
-            }
+                }
 
                 icon.setFitWidth(40);
                 icon.setFitHeight(40);
@@ -118,7 +120,12 @@ public class Controller {
         stepsLabel.setText("Steps: " + engine.getPawn().whatsSteps());
         scoreLabel.setText("Score: " + engine.getPawn().whatsScore());
         gridPane.setGridLinesVisible(true);
+
+        if(engine.getPawn().isGameOver()) {
+            showGameOverDialog();
+        }
     }
+
     private Image getTileImage(Tile tile) {
         String imageName;
 
@@ -133,6 +140,27 @@ public class Controller {
         return new Image(getClass().getResourceAsStream("/images/" + imageName));
     }
 
+    private void showGameOverDialog() {
+        javafx.application.Platform.runLater(() -> {
+            javafx.scene.control.Alert alert = new javafx.scene.control.Alert(javafx.scene.control.Alert.AlertType.INFORMATION);
+            alert.setTitle("Game Over");
+            alert.setHeaderText("You have been defeated!");
+            alert.setContentText("Would you like to restart or exit?");
 
+            javafx.scene.control.ButtonType restartButton = new javafx.scene.control.ButtonType("Restart");
+            javafx.scene.control.ButtonType exitButton = new javafx.scene.control.ButtonType("Exit");
+
+            alert.getButtonTypes().setAll(restartButton, exitButton);
+            alert.showAndWait().ifPresent(response -> {
+                if (response == restartButton) {
+                    engine = new GameEngine(10, 3); // Reset the game with a new engine instance
+                    updateGui();
+                    logMessage("Game restarted. New dungeon generated.");
+                } else if (response == exitButton) {
+                    javafx.application.Platform.exit(); // Exit the application
+                }
+            });
+        });
+    }
 
 }

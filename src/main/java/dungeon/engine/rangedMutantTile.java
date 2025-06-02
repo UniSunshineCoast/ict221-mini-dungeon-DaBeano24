@@ -8,7 +8,7 @@ public class rangedMutantTile extends Tile{
         if (!slayed) {
             pawn.addScore(2);
             slayed = true;
-            System.out.println("You encountered a ranged mutant and have slain them Hurrah! Your score is now: " + pawn.whatsScore());
+            pawn.getEngine().log("You encountered a ranged mutant and have slain them Hurrah! Your score is now: " + pawn.whatsScore());
         }
     }
     @Override
