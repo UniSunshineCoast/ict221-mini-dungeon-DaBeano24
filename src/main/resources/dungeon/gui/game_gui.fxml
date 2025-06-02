@@ -4,6 +4,7 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
+<?import javafx.scene.text.Text?>
 <BorderPane xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1"
             fx:controller="dungeon.gui.Controller"
             prefHeight="600.0" prefWidth="800.0">
@@ -37,6 +38,14 @@
             <Button text="Play" onAction="#onRunClicked" />
             <Button text="Pause" /> <!--- onAction="onPauseClicked" /> -->
             <Button text="Save" onAction="#onSaveClicked" />
+            <Button text="Load" onAction="#onLoadClicked" />
+
+            <Label text ="Top Scores:" />
+            <TextArea fx:id="topScoresArea"
+                      prefRowCount="5"
+                      prefWidth="200"
+                      editable="false"
+                        wrapText="true" />
         </VBox>
     </right>
 

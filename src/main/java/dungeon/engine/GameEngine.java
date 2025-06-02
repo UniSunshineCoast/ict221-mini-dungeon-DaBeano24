@@ -1,7 +1,11 @@
 package dungeon.engine;
-
-import javafx.scene.text.Text;
+import java.io.ObjectInputStream;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Scanner;
+import static java.lang.System.out;
+import java.time.LocalDate;
+
 
 public class GameEngine {
 
@@ -21,7 +25,7 @@ public class GameEngine {
         if (logger != null) {
             logger.accept(message);
         } else {
-            System.out.println(message); // Console output as fallback
+            out.println(message); // Console output as fallback
         }
     }
 
@@ -42,9 +46,9 @@ public class GameEngine {
 
         if (level > 2) {
             log("You have completed the game! Congratulations!");
-            System.exit(0); // Ends the game after level 2
+            return;
         }
-
+// This runs only for level 2
     map = new Tile[getSize()][getSize()];
         for (int i = 0; i < getSize(); i++) {
             for (int j = 0; j < getSize(); j++) {
@@ -64,6 +68,7 @@ public class GameEngine {
         pawn.setLocation(getSize() - 1, 0);
 
         log("Level " + level + " generated.");
+        stepsTaken = 0; // Reset steps taken for the new level
     }
 
     // section to track the active level of the game
@@ -153,10 +158,13 @@ public class GameEngine {
         // Tile Interaction
         Tile tile = map[newRow][newColumn];
         tile.interact(pawn, difficulty);
+        if (pawn.whatsHp() <= 0 && !pawn.isGameOver()) {
+            pawn.adjustHpAmount(-pawn.whatsHp());
+        }
         if (pawn.isGameOver()) {
             log("You met a tragic end, how unfortunate, Game Over.");
-            return; // Stop further processing if the pawn is dead
-        }
+    }
+
 
         // Replace GoldTiles with defaultTiles after interaction
         if (tile instanceof GoldTile gold && gold.isCollected()) {
@@ -232,6 +240,126 @@ public class GameEngine {
         return map;
     }
 
+    public void
+    saveGame(String filename) {
+        log("Entered saveGame method");
+        try (java.io.PrintWriter out = new java.io.PrintWriter(filename)) {
+            // Save the game stats
+            out.println(level);
+            out.println(difficulty);
+            out.println(stepsTaken);
+            out.println(pawn.whatsHp());
+            out.println(pawn.whatsScore());
+            out.println(pawn.whatsColumn());
+            out.println(pawn.whatsRow());
+
+            // Save the Map
+            for (int i = 0; i < getSize(); i++) {
+                for (int j = 0; j < getSize(); j++) {
+                    out.print(map[i][j].getTileSymbol());
+                }
+                out.println();
+            }
+            log("Game saved successfully.");
+        } catch (java.io.IOException e) {
+            System.out.println("IOException caught: " + e.getMessage());
+            e.printStackTrace();
+            log("Error saving game: " + e.getMessage());
+        } catch (Exception e) {
+            System.out.println("Exception caught: " + e.getMessage());
+            e.printStackTrace();
+            log("An unexpected error occurred while saving the game: " + e.getMessage());
+        }
+    }
+
+    // Load the game from a file
+    public void loadGame(String filename) {
+        try (java.util.Scanner in = new java.util.Scanner(new java.io.File(filename))) {
+            // Load the game stats
+            level = Integer.parseInt(in.nextLine());
+            difficulty = Integer.parseInt(in.nextLine());
+            stepsTaken = Integer.parseInt(in.nextLine());
+            int hp = Integer.parseInt(in.nextLine());
+            int score = Integer.parseInt(in.nextLine());
+            int column = Integer.parseInt(in.nextLine());
+            int row = Integer.parseInt(in.nextLine());
+
+            updateMaxSteps(); // Update max steps based on loaded difficulty
+
+            // Initialize the map
+            map = new Tile[getSize()][getSize()];
+            for (int i =0; i < getSize(); i++) {
+                String line = in.nextLine();
+                for (int j = 0; j < getSize(); j++) {
+                    char symbol = line.charAt(j);
+                    map[i][j] = createTileFromSymbol(symbol);
+                }
+            }
+            // Set the pawn's state
+            pawn = new Pawn(row, column);
+            pawn.setEngine(this);
+            pawn.adjustHpAmount(hp - pawn.whatsHp()); // Adjust health to match loaded value
+            pawn.addScore(score - pawn.whatsScore()); // Adjust score to match loaded value
+
+            log("Game loaded successfully from " + filename);
+        } catch (Exception e) {
+            log("Error loading game: " + e.getMessage());
+        }
+    }
+    private final String topScoresFile = "topScores.dat";
+    private List<TopScore> topScores = new ArrayList<>();
+
+    public void loadTopScores() {
+        try (ObjectInputStream ois = new ObjectInputStream(new java.io.FileInputStream(topScoresFile))) {
+            topScores =(List<TopScore>)ois.readObject();
+        } catch (Exception e) {
+            topScores = new ArrayList<>(); // Initialize an empty list if loading fails
+        }
+    }
+
+    public void saveTopScores() {
+        try (java.io.ObjectOutputStream oos = new java.io.ObjectOutputStream(new java.io.FileOutputStream(topScoresFile))) {
+            oos.writeObject(topScores);
+        } catch (java.io.IOException e) {
+            log("Error saving top scores: " + e.getMessage());
+        }
+    }
+
+    public boolean updateTopScores(int finalScore) {
+        TopScore newScore = new TopScore(finalScore, LocalDate.now());
+        topScores.add(newScore);
+        topScores.sort(null);
+        if (topScores.size() > 5) {
+            topScores = topScores.subList(0, 5);
+        }
+        saveTopScores();
+        return topScores.contains(newScore);
+        }
+        public List<TopScore> getTopScores() {
+        return new ArrayList<>(topScores); // Return a copy of the top scores list
+    }
+
+    // Create a Tile based on the symbol
+    private Tile createTileFromSymbol(char symbol) {
+        return switch (symbol) {
+            case 'T' -> new TrapTile();
+            case 'H' -> new healthTile();
+            case 'R' -> new rangedMutantTile();
+            case 'M' -> new meleeMutantTile();
+            case 'G' -> new GoldTile();
+            case 'L' -> new ladderTile();
+            default -> new defaultTile(); // Default tile for any other symbol
+        };
+    }
+
+    public int getStepsTaken() {
+        return stepsTaken;
+    }
+
+    public int getMaxSteps() {
+        return maxSteps;
+    }
+
     /**
      * Plays a text-based game
      */
@@ -239,17 +367,17 @@ public class GameEngine {
     public static void main(String[] args) {
 
         Scanner scanner = new Scanner(System.in);
-        System.out.println("Please select the games difficulty, be warned it will directly impact the damage you take from hostiles");
+        out.println("Please select the games difficulty, be warned it will directly impact the damage you take from hostiles");
         String input = scanner.nextLine();
         int difficulty = 3; // Default difficulty
         try {
             difficulty = Integer.parseInt(input);
             if (difficulty < 0 || difficulty > 10) difficulty = 3;
         } catch (NumberFormatException e) {
-            System.out.println("Invalid input, setting difficulty to default (3).");
+            out.println("Invalid input, setting difficulty to default (3).");
         }
         GameEngine engine = new GameEngine(10, difficulty);
-        engine.setLogger(System.out::println); // Set the logger to print to console
+        engine.setLogger(out::println); // Set the logger to print to console
 
         engine.pawn = new Pawn(9, 0); // Sets the start location of the pawn at the bottem left hand corner of the map.
         engine.pawn.setEngine(engine);
@@ -264,7 +392,7 @@ public class GameEngine {
 
         }
         engine.log("Game Over! Your score is: " + engine.pawn.whatsScore());
-        System.out.printf("The size of map is %d * %d\n", engine.getSize(), engine.getSize()); // ******Original code dont remove just yet*****
+        out.printf("The size of map is %d * %d\n", engine.getSize(), engine.getSize()); // ******Original code dont remove just yet*****
 
         }
 
