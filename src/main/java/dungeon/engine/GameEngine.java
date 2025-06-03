@@ -226,7 +226,7 @@ public class GameEngine {
                         log("You were attacked by a ranged Mutant, Ouch! Your health is now: " + pawn.whatsHp());
                     } else {
                         log("A ranged mutant shot at you but missed, slay it before it can attack again.");
-                        }
+                    }
                     // Checks to see if the attack has killed the pawn.
                     if (pawn.isGameOver()) {
                         log("Your Heart was Pierced by a ranged mutants arrow (you kinda need that organ) Game Over.");
@@ -347,8 +347,8 @@ public class GameEngine {
         }
         saveTopScores();
         return topScores.contains(newScore);
-        }
-        public List<TopScore> getTopScores() {
+    }
+    public List<TopScore> getTopScores() {
         return new ArrayList<>(topScores); // Return a copy of the top scores list
     }
 
@@ -407,7 +407,7 @@ public class GameEngine {
         engine.log("Game Over! Your score is: " + engine.pawn.whatsScore());
         out.printf("The size of map is %d * %d\n", engine.getSize(), engine.getSize()); // ******Original code dont remove just yet*****
 
-        }
+    }
 
 
 }

@@ -231,7 +231,7 @@ public class Controller {
             sb.append(String.format("#%d score: %d   Date: %s\n", i + 1, ts.getScore(), ts.getDate()));
         }
         topScoresArea.setText(sb.toString());
-        }
+    }
 
 
 }
